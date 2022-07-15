@@ -1,0 +1,24 @@
+Name: usercenter.rpc
+ListenOn: 0.0.0.0:2004
+Etcd:
+  Hosts:
+  - 127.0.0.1:2379
+  Key: usercenter.rpc
+
+JWTAuth:
+  AccessSecret: ae0536f9-6450-4606-8e13-5a19ed505da0
+  AccessExpire: 86400
+
+MySQL:
+  datasource: root:admin@tcp(127.0.0.1:3306)/house?charset=utf8mb4&parseTime=true&loc=Asia%2FHong_Kong
+
+Redis:
+  Host: redis:6379
+  Type: node
+  Pass: admin
+
+RedisCache:
+  - Host: redis:6379
+    Pass: admin
+
+Salt: RvFQrnKEsu9Z7oMN3ow9rSimxPzXUrhF

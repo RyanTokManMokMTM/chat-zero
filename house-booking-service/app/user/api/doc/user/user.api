@@ -1,0 +1,70 @@
+syntax = "v1"
+
+info(
+    title: "User Data Structure"
+    desc: "User Data Structure"
+    author: "type author here"
+    email: "type email here"
+    version: "v1"
+)
+
+type (
+    User {
+        ID int64 `json:"id"`
+        Email string `json:"email"`
+        Name string `json:"name"`
+        Sex int64 `json:"sex"`
+        Avatar string  `json:"avatar"`
+        Info string `json:"info"`
+    }
+)
+
+//Req & Resp
+type (
+    SignInReq {
+        Email string `json:"email"`
+        Password string `json:"password"`
+    }
+    SignInResp {
+        AccessToken string `json:"access_token"`
+        AccessExpire int64 `json:"access_expire"`
+        RefreshAfter int64 `json:"refresh_after"`
+    }
+)
+
+type (
+    SignUpReq {
+        Email string `json:"email"`
+        Password string `json:"password"`
+    }
+    SignUpResp {
+        AccessToken string `json:"access_token"`
+        AccessExpire int64 `json:"access_expire"`
+        RefreshAfter int64 `json:"refresh_after"`
+    }
+)
+
+type (
+    WXAuthReq {
+        Code string `json:"code"`
+        IV string `string:"iv"`
+        EncryptedData string `json:"encryptedData"`
+    }
+
+    WXNAutoResp {
+        AccessToken string `json:"access_token"`
+        AccessExpire int64 `json:"access_expire"`
+        RefreshAfter int64 `json:"refresh_after"`
+    }
+
+
+)
+
+type (
+    UserInfoReq {}
+    UserInfoResp {
+        UserInfo User `json:"user_info"`
+    }
+)
+
+
