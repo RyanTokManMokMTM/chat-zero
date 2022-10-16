@@ -1,0 +1,26 @@
+syntax = "v1"
+//
+//info(
+//    title: "type title here"
+//    desc: "type desc here"
+//    author: "type author here"
+//    email: "type email here"
+//    version: "type version here"
+//)
+
+type (
+    healthCheckReq {}
+
+    healthCheckResp{
+        Message string `json:"msg"`
+    }
+)
+
+@server (
+//    jwt: Auth
+    group : check
+)
+service Chat-Zero{
+    @handler ping
+    get /ping(healthCheckReq) returns (healthCheckResp)
+}

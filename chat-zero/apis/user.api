@@ -1,0 +1,58 @@
+syntax = "v1"
+
+//info(
+//    title: "type title here"
+//    desc: "type desc here"
+//    author: "type author here"
+//    email: "type email here"
+//    version: "type version here"
+//)
+
+type (
+    SignInReq{
+        Email string `json:"email"`
+        Password string `json:"password"`
+    }
+    SignInResp{
+        Token string `json:"token"`
+        ExpiredTime uint `json:"expired_time"`
+    }
+
+    SignUpReq{
+        Email string `json:"email"`
+        Name string `json:"name""`
+        Password string `json:"password"`
+    }
+    SignUpResp{
+        Token string `json:"token"`
+        ExpiredTime uint `json:"expired_time"`
+    }
+
+    GetProfileReq{}
+    GetProfileResp{
+        Name string `json:"name"`
+        Email string `json:"email"`
+    }
+)
+
+
+@server  (
+    group : user
+)
+service Chat-Zero {
+    @handler usersignup
+    post /user/signup(SignUpReq) returns (SignUpResp)
+
+    @handler usersignin
+    post /user/signin(SignInReq) returns (SignInResp)
+}
+
+@server  (
+    jwt: Auth
+    group : user
+)
+service Chat-Zero {
+
+    @handler getuserprofile
+    get /user/profile(GetProfileReq) returns (GetProfileResp)
+}
