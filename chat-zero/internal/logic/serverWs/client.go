@@ -1,6 +1,7 @@
 package serverWs
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -26,12 +27,13 @@ type Message struct {
 	Data string //actual data from user
 }
 
-func NewClientConn(userID uint, conn *websocket.Conn, hub *ChannelMap) *ClientConn {
+func NewClientConn(userID uint, conn *websocket.Conn, hub *ChannelMap, svcCtx *svc.ServiceContext) *ClientConn {
 	return &ClientConn{
 		hub:    hub,
 		UserID: userID,
 		conn:   conn,
 		send:   make(chan []byte),
+		svcCtx: svcCtx,
 	}
 }
 
@@ -58,22 +60,39 @@ func (c *ClientConn) ReadLoop() {
 			}
 			break
 		}
-		//TODO: record : userID ,ToUerID, message, sendTime
 		req := &MessageReq{}
 		err = json.Unmarshal(msg, req)
-		req.FromUser = c.UserID
 		if err != nil {
 			logx.Error(err)
+			//there may send back an error message
+			continue
 		}
 
-		if req.ToUser > 0 {
-			if _, ok := c.hub.channels[req.ToUser]; !ok {
-				logx.Error("User %v is offline\n", req.ToUser)
-				continue
-			}
+		//TODO: Get Room ID From JSON
+		if err := c.svcCtx.DAO.ExistInTheRoom(context.TODO(), c.UserID, req.GroupID); err != nil {
+			logx.Error(err)
+			continue
+		}
+		//TODO: Check User
+		//TODO: Store Message
+		if err := c.svcCtx.DAO.InsertOneMessage(context.TODO(), req.GroupID, c.UserID, req.Message); err != nil {
+			logx.Error()
+			continue
+		}
+		//TODO: send the message to all user to all room user who is online
+		allUser, err := c.svcCtx.DAO.GetRoomUsers(context.TODO(), req.GroupID)
+		if err != nil {
+			logx.Error(err)
+			continue
 		}
 
-		c.hub.broadcast <- req
+		boardCast := &BoardCastMessage{
+			FromUser: c.UserID,
+			ToUser:   allUser,
+			Data:     req.Message,
+		}
+
+		c.hub.broadcast <- boardCast
 	}
 }
 

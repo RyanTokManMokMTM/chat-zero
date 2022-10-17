@@ -52,6 +52,11 @@ func NewDBEngine(c *config.Config) *gorm.DB {
 		logx.Info(err)
 	}
 
+	err = conn.AutoMigrate(&Message{})
+	if err != nil {
+		logx.Info(err)
+	}
+
 	err = conn.SetupJoinTable(&User{}, "Rooms", &UsersRooms{})
 	if err != nil {
 		logx.Info(err)

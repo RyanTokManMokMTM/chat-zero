@@ -10,10 +10,14 @@ import (
 )
 
 type MessageReq struct {
+	GroupID uint   `json:"group_id"`
+	Message string `json:"message"`
+}
+
+type BoardCastMessage struct {
 	FromUser uint
-	ToUser   uint   `json:"to_user"`
-	GroupID  uint   `json:"group_id"`
-	Message  string `json:"message"`
+	ToUser   []uint
+	Data     string
 }
 
 type MessageResp struct {
@@ -56,7 +60,7 @@ func ServerWS(ctx *svc.ServiceContext, hub *ChannelMap, w http.ResponseWriter, r
 		return
 	}
 	logx.Infof("Client %d(name:%s) is connected via websocket", userId, u.Name)
-	client := NewClientConn(userId, conn, hub)
+	client := NewClientConn(userId, conn, hub, ctx)
 	hub.register <- client
 	hub.systemMessage <- []byte(fmt.Sprintf("%s logged in", u.Name))
 

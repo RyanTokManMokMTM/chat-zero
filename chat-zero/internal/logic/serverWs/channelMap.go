@@ -12,7 +12,7 @@ type ChannelMap struct {
 	channels      map[uint]*ClientConn
 	register      chan *ClientConn
 	unRegister    chan *ClientConn
-	broadcast     chan *MessageReq //send to all user is online
+	broadcast     chan *BoardCastMessage //send to all user is online
 	systemMessage chan []byte
 }
 
@@ -21,7 +21,7 @@ func NewChannelMap() *ChannelMap {
 		channels:      make(map[uint]*ClientConn, 100),
 		register:      make(chan *ClientConn),
 		unRegister:    make(chan *ClientConn),
-		broadcast:     make(chan *MessageReq),
+		broadcast:     make(chan *BoardCastMessage),
 		systemMessage: make(chan []byte),
 	}
 }
@@ -63,9 +63,14 @@ func (ch *ChannelMap) Run() {
 
 		case msg := <-ch.broadcast:
 			logx.Info("send message")
-			if client, ok := ch.channels[msg.ToUser]; ok {
-				logx.Infof("Sent message to user %d", msg.ToUser)
-				client.conn.WriteMessage(websocket.TextMessage, []byte(msg.Message))
+			for _, id := range msg.ToUser {
+				//ignore it self
+				if id == msg.FromUser {
+					continue
+				}
+				if client, ok := ch.channels[id]; ok {
+					client.conn.WriteMessage(websocket.TextMessage, []byte(msg.Data))
+				}
 			}
 		case msg := <-ch.systemMessage:
 			info := fmt.Sprintf("[SYSTEM MESSAGE] : %v", string(msg))
