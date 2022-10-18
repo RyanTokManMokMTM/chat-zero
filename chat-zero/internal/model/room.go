@@ -27,4 +27,28 @@ func (r *Room) TableName() string {
 func (r *Room) InsertOne(db *gorm.DB, ctx context.Context) error {
 	return db.WithContext(ctx).Debug().Create(&r).Error
 }
-func (r *Room) FindOne() {}
+
+func (r *Room) RemoveOne(db *gorm.DB, ctx context.Context) error {
+	return db.WithContext(ctx).Debug().Delete(&r).Error
+}
+
+func (r *Room) FindOne(db *gorm.DB, ctx context.Context) error {
+	return db.WithContext(ctx).Debug().First(&r).Error
+}
+
+func (r *Room) InsertOneUser(db *gorm.DB, ctx context.Context, user *User) error {
+	return db.WithContext(ctx).Debug().Model(&r).Association("Users").Append(user)
+}
+
+func (r *Room) RemoveOneUser(db *gorm.DB, ctx context.Context, user *User) error {
+	return db.WithContext(ctx).Debug().Model(&r).Association("Users").Delete(user)
+}
+
+func (r *Room) FindRoomMembers(db *gorm.DB, ctx context.Context) ([]*User, error) {
+	var members []*User
+	err := db.WithContext(ctx).Debug().Model(&r).Association("Users").Find(&members)
+	if err != nil {
+		return nil, err
+	}
+	return members, nil
+}

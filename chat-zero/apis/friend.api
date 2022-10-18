@@ -1,0 +1,67 @@
+syntax = "v1"
+//
+//info(
+//    title: "type title here"
+//    desc: "type desc here"
+//    author: "type author here"
+//    email: "type email here"
+//    version: "type version here"
+//)
+
+
+type (
+    AddFriendReq struct{
+        UserID uint `json:"user_id"`
+    }
+    AddFriendResp struct{
+        Message string  `json:"message"`
+    }
+
+    RemoveFriendReq struct {
+        FriendID uint `json:"user_id"`
+    }
+    RemoveFriendResp struct {}
+
+    AcceptFriendNotificationReq struct{
+        RequestID uint `json:"request_id"`
+    }
+    AcceptFriendNotificationResp struct{
+        Message string  `json:"message"`
+    }
+
+    DeclineFriendNotificationReq struct{
+        RequestID uint `json:"request_id"`
+    }
+    DeclineFriendNotificationResp struct{
+        Message string  `json:"message"`
+    }
+
+    CancelFriendNotificationReq struct{
+        RequestID uint `json:"request_id"`
+    }
+    CancelFriendNotificationResp struct{
+        Message string  `json:"message"`
+    }
+
+)
+
+@server (
+    group : friend
+    jwt : Auth
+)
+service Chat-Zero {
+    @handler AddFriend
+    post /friend(AddFriendReq) returns (AddFriendResp);
+
+    @handler RemoveFriend
+    delete /friend(RemoveFriendReq) returns (RemoveFriendResp);
+
+    @handler AcceptFriendRequest
+    post /friend/request/accepted(AcceptFriendNotificationReq) returns (AcceptFriendNotificationResp);
+
+    @handler CancelFriendRequest
+    post /friend/request/cancel(CancelFriendNotificationReq) returns (CancelFriendNotificationResp);
+
+    @handler DeclineFriendRequest
+    post /friend/request/decline(DeclineFriendNotificationReq) returns (DeclineFriendNotificationResp);
+}

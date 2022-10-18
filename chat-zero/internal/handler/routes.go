@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	check "gtihub.com/ryantokmanmokmtm/chat-zero/internal/handler/check"
+	friend "gtihub.com/ryantokmanmokmtm/chat-zero/internal/handler/friend"
+	room "gtihub.com/ryantokmanmokmtm/chat-zero/internal/handler/room"
 	user "gtihub.com/ryantokmanmokmtm/chat-zero/internal/handler/user"
 	"gtihub.com/ryantokmanmokmtm/chat-zero/internal/svc"
 
@@ -43,6 +45,68 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodGet,
 				Path:    "/user/profile",
 				Handler: user.GetuserprofileHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/friend",
+				Handler: friend.AddFriendHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/friend",
+				Handler: friend.RemoveFriendHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/friend/request/accepted",
+				Handler: friend.AcceptFriendRequestHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/friend/request/cancel",
+				Handler: friend.CancelFriendRequestHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/friend/request/decline",
+				Handler: friend.DeclineFriendRequestHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/room",
+				Handler: room.CreateRoomHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/room",
+				Handler: room.DeleteRoomHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/room/join/:room_id",
+				Handler: room.JoinRoomHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/room/leave/:room_id",
+				Handler: room.LeaveRoomHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/room/members/:room_id",
+				Handler: room.RoomMembersHandler(serverCtx),
 			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),

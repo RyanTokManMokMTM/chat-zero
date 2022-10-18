@@ -20,7 +20,18 @@ func (u *User) TableName() string {
 }
 
 func (u *User) InsertOne(db *gorm.DB, ctx context.Context) error {
-	return db.WithContext(ctx).Debug().Create(&u).Error
+	return db.WithContext(ctx).Debug().Transaction(func(tx *gorm.DB) error {
+		if err := tx.WithContext(ctx).Create(&Friend{UserID: u.ID}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.WithContext(ctx).Debug().Create(&u).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 }
 
 func (u *User) FindOneByID(db *gorm.DB, ctx context.Context) error {

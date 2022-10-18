@@ -35,6 +35,7 @@ func (ur *UsersRooms) GetRoomUsers(db *gorm.DB, ctx context.Context) ([]uint, er
 
 	return allUser, nil
 }
+
 func (ur *UsersRooms) FindOne(db *gorm.DB, ctx context.Context) error {
 	return db.WithContext(ctx).Debug().First(&ur).Error
 }

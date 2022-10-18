@@ -2,3 +2,5 @@ syntax = "v1"
 
 import "./health-check.api"
 import "./user.api"
+import  "./friend.api"
+import  "./room.api"

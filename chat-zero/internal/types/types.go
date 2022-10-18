@@ -36,3 +36,87 @@ type GetProfileResp struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
+
+type AddFriendReq struct {
+	UserID uint `json:"user_id"`
+}
+
+type AddFriendResp struct {
+	Message string `json:"message"`
+}
+
+type RemoveFriendReq struct {
+	FriendID uint `json:"user_id"`
+}
+
+type RemoveFriendResp struct {
+}
+
+type AcceptFriendNotificationReq struct {
+	RequestID uint `json:"request_id"`
+}
+
+type AcceptFriendNotificationResp struct {
+	Message string `json:"message"`
+}
+
+type DeclineFriendNotificationReq struct {
+	RequestID uint `json:"request_id"`
+}
+
+type DeclineFriendNotificationResp struct {
+	Message string `json:"message"`
+}
+
+type CancelFriendNotificationReq struct {
+	RequestID uint `json:"request_id"`
+}
+
+type CancelFriendNotificationResp struct {
+	Message string `json:"message"`
+}
+
+type CreateRoomReq struct {
+	Name string `json:"name"`
+	Info string `json:"info"`
+}
+
+type CreateRoomResp struct {
+	RoomID uint   `json:"room_id"`
+	Name   string `json:"room_name"`
+	Info   string `json:"room_info"`
+}
+
+type DeleteRoomReq struct {
+	ID uint `json:"room_id"`
+}
+
+type DeleteRoomResp struct {
+}
+
+type JoinRoomReq struct {
+	RoomID uint `path:"room_id"`
+}
+
+type JoinRoomResp struct {
+}
+
+type LeaveRoomReq struct {
+	RoomID uint `path:"room_id"`
+}
+
+type LeaveRoomResp struct {
+}
+
+type GetRoomMembersReq struct {
+	RoomID uint `path:"room_id"`
+}
+
+type GetRoomMembersResp struct {
+	Members []RoomMemberInfo `json:"members"`
+}
+
+type RoomMemberInfo struct {
+	UserID   uint   `json:"user_id"`
+	UserName string `json:"user_name"`
+}

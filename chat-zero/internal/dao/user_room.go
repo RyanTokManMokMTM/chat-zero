@@ -5,9 +5,9 @@ import (
 	"gtihub.com/ryantokmanmokmtm/chat-zero/internal/model"
 )
 
-func (d *DAO) ExistInTheRoom(ctx context.Context, userID, roomId uint) error {
+func (d *DAO) ExistInTheRoom(ctx context.Context, userID, roomID uint) error {
 	ur := model.UsersRooms{
-		RoomID: roomId,
+		RoomID: roomID,
 		UserID: userID,
 	}
 	return ur.FindOne(d.engine, ctx)

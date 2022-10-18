@@ -1,0 +1,69 @@
+syntax = "v1"
+//
+//info(
+//    title: "type title here"
+//    desc: "type desc here"
+//    author: "type author here"
+//    email: "type email here"
+//    version: "type version here"
+//)
+
+type (
+    CreateRoomReq struct{
+        Name string `json:"name"`
+        Info string `json:"info"`
+    }
+    CreateRoomResp struct{
+        RoomID uint `json:"room_id"`
+        Name string `json:"room_name"`
+        Info string `json:"room_info"`
+    }
+
+    DeleteRoomReq struct {
+        ID uint `json:"room_id"`
+    }
+    DeleteRoomResp struct {}
+
+    JoinRoomReq struct {
+        RoomID uint `path:"room_id"`
+    }
+    JoinRoomResp struct {}
+
+    LeaveRoomReq struct {
+        RoomID uint `path:"room_id"`
+    }
+    LeaveRoomResp struct {}
+
+    GetRoomMembersReq struct {
+        RoomID uint `path:"room_id"`
+    }
+    GetRoomMembersResp struct {
+        Members []RoomMemberInfo `json:"members"`
+    }
+)
+
+type RoomMemberInfo struct {
+    UserID uint `json:"user_id"`
+    UserName string `json:"user_name"`
+}
+
+@server (
+    jwt :  Auth
+    group : room
+)
+service Chat-Zero {
+    @handler CreateRoom
+    post /room(CreateRoomReq) returns (CreateRoomResp);
+
+    @handler  DeleteRoom
+    delete /room(DeleteRoomReq) returns (DeleteRoomResp);
+
+    @handler JoinRoom
+    post /room/join/:room_id(JoinRoomReq) returns (JoinRoomResp);
+
+    @handler LeaveRoom
+    post /room/leave/:room_id(LeaveRoomReq) returns (LeaveRoomResp);
+
+    @handler RoomMembers
+    get /room/members/:room_id(GetRoomMembersReq) returns (GetRoomMembersResp);
+}
