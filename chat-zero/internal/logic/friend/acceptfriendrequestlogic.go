@@ -44,7 +44,7 @@ func (l *AcceptFriendRequestLogic) AcceptFriendRequest(req *types.AcceptFriendNo
 	}
 
 	//TODO: Check request is exist or request state is ture
-	_, err = l.svcCtx.DAO.FindOneFriendNotificationByID(l.ctx, req.RequestID)
+	notification, err := l.svcCtx.DAO.FindOneFriendNotificationByID(l.ctx, req.RequestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("friend request not found")
@@ -53,7 +53,11 @@ func (l *AcceptFriendRequestLogic) AcceptFriendRequest(req *types.AcceptFriendNo
 	}
 
 	//Update Friend Request
-	l.svcCtx.DAO.AcceptFriendNotification(l.ctx, req.RequestID)
-
-	return
+	err = l.svcCtx.DAO.AcceptFriendNotification(l.ctx, notification)
+	if err != nil {
+		return nil, err
+	}
+	return &types.AcceptFriendNotificationResp{
+		Message: fmt.Sprintf("friend request accepted"),
+	}, nil
 }

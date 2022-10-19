@@ -43,21 +43,32 @@ func (l *AddFriendLogic) AddFriend(req *types.AddFriendReq) (resp *types.AddFrie
 		return nil, err
 	}
 
-	//Add to the notification if it hasn't sent a request.
-	notification, err := l.svcCtx.DAO.FindOneFriendNotification(l.ctx, userId, req.UserID)
+	//TODO: Is Friend already?
+	isFriend, err := l.svcCtx.DAO.IsFriend(l.ctx, userId, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	if isFriend {
+		return &types.AddFriendResp{
+			Message: fmt.Sprintf("both of your already in friendship."),
+		}, nil
+	}
+	//TODO:Add to the notification if it hasn't sent a request.
+	_, err = l.svcCtx.DAO.FindOneFriendNotification(l.ctx, userId, req.UserID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 
-	if notification.ID != 0 {
-		return nil, fmt.Errorf("friend request has been sent")
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		if err := l.svcCtx.DAO.InsertOneFriendNotification(l.ctx, userId, req.UserID); err != nil {
+			return nil, err
+		}
+
+		return &types.AddFriendResp{
+			Message: fmt.Sprintf("friend request sent"),
+		}, nil
 	}
 
-	if err := l.svcCtx.DAO.InsertOneFriendNotification(l.ctx, userId, req.UserID); err != nil {
-		return nil, err
-	}
-
-	return &types.AddFriendResp{
-		Message: fmt.Sprintf("friend request sent"),
-	}, nil
+	return nil, fmt.Errorf("friend request had been sent")
 }

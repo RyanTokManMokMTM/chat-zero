@@ -76,6 +76,18 @@ type CancelFriendNotificationResp struct {
 	Message string `json:"message"`
 }
 
+type GetFriendRequestReq struct {
+}
+
+type GetFriendRequestResp struct {
+	Requests []FriendRequest `json:"requests"`
+}
+
+type FriendRequest struct {
+	RequestID uint `json:"request_id"`
+	Sender    uint `json:"sender"`
+}
+
 type CreateRoomReq struct {
 	Name string `json:"name"`
 	Info string `json:"info"`

@@ -50,7 +50,21 @@ func (fd *Friend) RemoveOne(db *gorm.DB, ctx context.Context, userID, friendID u
 	})
 }
 
-func (fd *Friend) UpdateState(db *gorm.DB, ctx context.Context) error {
-	//Remove an existing Friend
-	return db.WithContext(ctx).Debug().Model(&fd).Update("state", false).Error
+func (fd *Friend) IsFriend(db *gorm.DB, ctx context.Context, friendID uint) (bool, error) {
+	var friend User
+
+	if err := db.WithContext(ctx).Debug().Where("user_id = ?", fd.UserID).First(&fd).Error; err != nil {
+		return false, err
+	}
+
+	err := db.WithContext(ctx).Debug().Model(&fd).Where("user_id = ?", friendID).Association("Friend").Find(&friend)
+	if err != nil {
+		return false, err
+	}
+
+	if friend.ID == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }

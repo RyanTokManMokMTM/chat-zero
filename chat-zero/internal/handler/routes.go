@@ -58,22 +58,27 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: friend.AddFriendHandler(serverCtx),
 			},
 			{
+				Method:  http.MethodGet,
+				Path:    "/friend/requests",
+				Handler: friend.GetFriendRequestHandler(serverCtx),
+			},
+			{
 				Method:  http.MethodDelete,
 				Path:    "/friend",
 				Handler: friend.RemoveFriendHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,
-				Path:    "/friend/request/accepted",
+				Path:    "/friend/request/accept",
 				Handler: friend.AcceptFriendRequestHandler(serverCtx),
 			},
 			{
-				Method:  http.MethodPost,
+				Method:  http.MethodPatch,
 				Path:    "/friend/request/cancel",
 				Handler: friend.CancelFriendRequestHandler(serverCtx),
 			},
 			{
-				Method:  http.MethodPost,
+				Method:  http.MethodPatch,
 				Path:    "/friend/request/decline",
 				Handler: friend.DeclineFriendRequestHandler(serverCtx),
 			},

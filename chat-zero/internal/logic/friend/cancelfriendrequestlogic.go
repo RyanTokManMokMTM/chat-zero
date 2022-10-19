@@ -53,7 +53,7 @@ func (l *CancelFriendRequestLogic) CancelFriendRequest(req *types.CancelFriendNo
 	}
 
 	//TODO: Set The notification state to false
-	if err := l.svcCtx.DAO.UpdateNotificationState(l.ctx, req.RequestID); err != nil {
+	if err := l.svcCtx.DAO.CancelFriendNotification(l.ctx, req.RequestID); err != nil {
 		return nil, err
 	}
 	return &types.CancelFriendNotificationResp{

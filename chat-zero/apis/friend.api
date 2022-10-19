@@ -43,7 +43,16 @@ type (
         Message string  `json:"message"`
     }
 
+    GetFriendRequestReq struct {}
+    GetFriendRequestResp struct {
+        Requests []FriendRequest `json:"requests"`
+    }
 )
+
+type FriendRequest struct {
+    RequestID uint `json:"request_id"`
+    Sender uint `json:"sender"`
+}
 
 @server (
     group : friend
@@ -53,15 +62,19 @@ service Chat-Zero {
     @handler AddFriend
     post /friend(AddFriendReq) returns (AddFriendResp);
 
+    @handler GetFriendRequest
+    get /friend/requests(GetFriendRequestReq) returns (GetFriendRequestResp);
+
+
     @handler RemoveFriend
     delete /friend(RemoveFriendReq) returns (RemoveFriendResp);
 
     @handler AcceptFriendRequest
-    post /friend/request/accepted(AcceptFriendNotificationReq) returns (AcceptFriendNotificationResp);
+    post /friend/request/accept(AcceptFriendNotificationReq) returns (AcceptFriendNotificationResp);
 
     @handler CancelFriendRequest
-    post /friend/request/cancel(CancelFriendNotificationReq) returns (CancelFriendNotificationResp);
+    patch /friend/request/cancel(CancelFriendNotificationReq) returns (CancelFriendNotificationResp);
 
     @handler DeclineFriendRequest
-    post /friend/request/decline(DeclineFriendNotificationReq) returns (DeclineFriendNotificationResp);
+    patch /friend/request/decline(DeclineFriendNotificationReq) returns (DeclineFriendNotificationResp);
 }

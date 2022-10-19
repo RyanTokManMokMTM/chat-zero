@@ -13,21 +13,21 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type DeclineFriendRequestLogic struct {
+type GetFriendRequestLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-func NewDeclineFriendRequestLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeclineFriendRequestLogic {
-	return &DeclineFriendRequestLogic{
+func NewGetFriendRequestLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetFriendRequestLogic {
+	return &GetFriendRequestLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *DeclineFriendRequestLogic) DeclineFriendRequest(req *types.DeclineFriendNotificationReq) (resp *types.DeclineFriendNotificationResp, err error) {
+func (l *GetFriendRequestLogic) GetFriendRequest(req *types.GetFriendRequestReq) (resp *types.GetFriendRequestResp, err error) {
 	// todo: add your logic here and delete this line
 	userId := ctxtool.GetUserIDFromCtx(l.ctx)
 	if userId == 0 {
@@ -43,21 +43,19 @@ func (l *DeclineFriendRequestLogic) DeclineFriendRequest(req *types.DeclineFrien
 		return nil, err
 	}
 
-	//TODO: Check request is exist or request state is ture
-	_, err = l.svcCtx.DAO.FindOneFriendNotificationByID(l.ctx, req.RequestID)
+	list, err := l.svcCtx.DAO.GetFriendRequest(l.ctx, userId)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("friend request not found")
-		}
 		return nil, err
 	}
 
-	//TODO: Set The notification state to false
-	if err := l.svcCtx.DAO.DeclineFriendNotification(l.ctx, req.RequestID); err != nil {
-		return nil, err
+	var request []types.FriendRequest
+	for _, req := range list {
+		request = append(request, types.FriendRequest{
+			RequestID: req.ID,
+			Sender:    req.Sender,
+		})
 	}
-
-	return &types.DeclineFriendNotificationResp{
-		Message: fmt.Sprintf("friend request is declined"),
+	return &types.GetFriendRequestResp{
+		Requests: request,
 	}, nil
 }
