@@ -7,23 +7,35 @@ import (
 	"gtihub.com/ryantokmanmokmtm/chat-zero/internal/svc"
 	"gtihub.com/ryantokmanmokmtm/chat-zero/util/ctxtool"
 	"net/http"
+	"time"
 )
+
+var globalHub *ChannelMap
+
+const (
+	SYSTEM = iota
+	MESSAGE
+)
+
+type SenderData struct {
+	UserID   uint   `json:"user_id"`
+	UserName string `json:"user_name"`
+}
 
 type MessageReq struct {
 	GroupID uint   `json:"group_id"`
 	Message string `json:"message"`
 }
 
-type BoardCastMessage struct {
-	FromUser uint
-	ToUser   []uint
-	Data     string
-}
-
-type MessageResp struct {
-	IsSystem uint   `json:"is_system"`
-	FromUser uint   `json:"to_user"`
-	Message  []byte `json:"message"`
+type Message struct {
+	Type         uint       `json:"message_type"`
+	GroupID      uint       `json:"group_id"` //for chat
+	GroupMembers []uint     `json:"-"`
+	ToUser       uint       `json:"to_user"` //for notification
+	UserID       uint       `json:"user_id"`
+	UserDetail   SenderData `json:"sender_info"`
+	Content      string     `json:"content"`
+	SendTime     int64      `json:"send_time"`
 }
 
 const (
@@ -38,6 +50,18 @@ var upgrade = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
+}
+
+func NewServerWS(svcCtx *svc.ServiceContext) func(w http.ResponseWriter, r *http.Request) {
+	if globalHub == nil {
+		logx.Info("initialing hub...")
+		globalHub = NewChannelMap()
+		go globalHub.Run()
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		ServerWS(svcCtx, globalHub, w, r)
+	}
 }
 
 func ServerWS(ctx *svc.ServiceContext, hub *ChannelMap, w http.ResponseWriter, r *http.Request) {
@@ -62,7 +86,15 @@ func ServerWS(ctx *svc.ServiceContext, hub *ChannelMap, w http.ResponseWriter, r
 	logx.Infof("Client %d(name:%s) is connected via websocket", userId, u.Name)
 	client := NewClientConn(userId, conn, hub, ctx)
 	hub.register <- client
-	hub.systemMessage <- []byte(fmt.Sprintf("%s logged in", u.Name))
+	hub.broadcast <- &Message{
+		Type:         SYSTEM,
+		GroupID:      0,
+		ToUser:       0,
+		UserID:       u.ID,
+		Content:      fmt.Sprintf("[SYSTEM] %s is now online.", u.Name),
+		SendTime:     time.Now().Unix(),
+		GroupMembers: nil,
+	}
 
 	go client.ReadLoop()
 	go client.WriteLoop()

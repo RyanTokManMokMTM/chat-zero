@@ -20,13 +20,6 @@ type ClientConn struct {
 	send   chan []byte
 }
 
-type Message struct {
-	From uint
-	To   uint
-	Type uint   // 0() or 1
-	Data string //actual data from user
-}
-
 func NewClientConn(userID uint, conn *websocket.Conn, hub *ChannelMap, svcCtx *svc.ServiceContext) *ClientConn {
 	return &ClientConn{
 		hub:    hub,
@@ -67,7 +60,11 @@ func (c *ClientConn) ReadLoop() {
 			//there may send back an error message
 			continue
 		}
-
+		u, err := c.svcCtx.DAO.UserFindOneByID(context.TODO(), c.UserID)
+		if err != nil {
+			logx.Error(err)
+			continue
+		}
 		//TODO: Get Room ID From JSON
 		if err := c.svcCtx.DAO.ExistInTheRoom(context.TODO(), c.UserID, req.GroupID); err != nil {
 			logx.Error(err)
@@ -86,13 +83,21 @@ func (c *ClientConn) ReadLoop() {
 			continue
 		}
 
-		boardCast := &BoardCastMessage{
-			FromUser: c.UserID,
-			ToUser:   allUser,
-			Data:     req.Message,
+		message := &Message{
+			Type:    MESSAGE,
+			GroupID: req.GroupID,
+			ToUser:  0,
+			UserID:  c.UserID,
+			UserDetail: SenderData{
+				UserID:   u.ID,
+				UserName: u.Name,
+			},
+			Content:      req.Message,
+			SendTime:     time.Now().Unix(),
+			GroupMembers: allUser,
 		}
 
-		c.hub.broadcast <- boardCast
+		c.hub.broadcast <- message
 	}
 }
 
@@ -105,7 +110,16 @@ func (c *ClientConn) WriteLoop() {
 
 	for {
 		select {
-		case msg, ok := <-c.send:
+		case data, ok := <-c.send:
+			/*
+				TODO:
+				Response:
+				1. Type of data - system or message
+				2. UserSent
+				3. Data ： message
+
+			*/
+
 			//set  write deadline and send
 			c.conn.SetWriteDeadline(time.Now().Add(time.Second * WriteWait))
 			if !ok {
@@ -115,18 +129,21 @@ func (c *ClientConn) WriteLoop() {
 
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
+				logx.Error(err)
 				return
 			}
-			w.Write(msg)     //send the first message
-			n := len(c.send) //any other message else?
 
+			_, _ = w.Write(data)
+			n := len(c.send)
 			for i := 0; i < n; i++ {
-				w.Write(<-c.send)
+				_, _ = w.Write(data)
 			}
 
 			if err := w.Close(); err != nil {
+				logx.Error(err)
 				return
 			}
+
 		case <-t.C:
 			c.conn.SetWriteDeadline(time.Now().Add(time.Second * 45))
 			//send a ping message

@@ -1,7 +1,7 @@
 package serverWs
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/gorilla/websocket"
 	"github.com/zeromicro/go-zero/core/logx"
 	"sync"
@@ -9,20 +9,18 @@ import (
 
 type ChannelMap struct {
 	sync.Mutex
-	channels      map[uint]*ClientConn
-	register      chan *ClientConn
-	unRegister    chan *ClientConn
-	broadcast     chan *BoardCastMessage //send to all user is online
-	systemMessage chan []byte
+	channels   map[uint]*ClientConn
+	register   chan *ClientConn
+	unRegister chan *ClientConn
+	broadcast  chan *Message //send to all user is online - chat
 }
 
 func NewChannelMap() *ChannelMap {
 	return &ChannelMap{
-		channels:      make(map[uint]*ClientConn, 100),
-		register:      make(chan *ClientConn),
-		unRegister:    make(chan *ClientConn),
-		broadcast:     make(chan *BoardCastMessage),
-		systemMessage: make(chan []byte),
+		channels:   make(map[uint]*ClientConn, 100),
+		register:   make(chan *ClientConn),
+		unRegister: make(chan *ClientConn),
+		broadcast:  make(chan *Message),
 	}
 }
 
@@ -61,21 +59,28 @@ func (ch *ChannelMap) Run() {
 			logx.Info("Client left!")
 			ch.Remove(client.UserID)
 
-		case msg := <-ch.broadcast:
+		case message := <-ch.broadcast:
 			logx.Info("send message")
-			for _, id := range msg.ToUser {
-				//ignore it self
-				if id == msg.FromUser {
-					continue
+			send, _ := json.Marshal(message)
+			if message.ToUser > 0 {
+				//Send to User
+				if client, ok := ch.channels[message.UserID]; ok {
+					client.send <- send
 				}
-				if client, ok := ch.channels[id]; ok {
-					client.conn.WriteMessage(websocket.TextMessage, []byte(msg.Data))
+			} else if message.GroupMembers != nil && message.GroupID > 0 {
+				for _, id := range message.GroupMembers {
+					if client, ok := ch.channels[id]; ok {
+						if client.UserID == message.UserID {
+							continue
+						}
+						client.send <- send
+					}
 				}
-			}
-		case msg := <-ch.systemMessage:
-			info := fmt.Sprintf("[SYSTEM MESSAGE] : %v", string(msg))
-			for _, client := range ch.channels {
-				client.conn.WriteMessage(websocket.TextMessage, []byte(info))
+			} else {
+				//send to all user
+				for _, client := range ch.channels {
+					client.send <- send
+				}
 			}
 		}
 

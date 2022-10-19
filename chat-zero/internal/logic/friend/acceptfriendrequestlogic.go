@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
+	"gtihub.com/ryantokmanmokmtm/chat-zero/internal/logic/serverWs"
 	"gtihub.com/ryantokmanmokmtm/chat-zero/util/ctxtool"
 
 	"gtihub.com/ryantokmanmokmtm/chat-zero/internal/svc"
@@ -35,7 +36,7 @@ func (l *AcceptFriendRequestLogic) AcceptFriendRequest(req *types.AcceptFriendNo
 	}
 
 	//find that user
-	_, err = l.svcCtx.DAO.UserFindOneByID(l.ctx, userId)
+	u, err := l.svcCtx.DAO.UserFindOneByID(l.ctx, userId)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("user not exist")
@@ -57,6 +58,12 @@ func (l *AcceptFriendRequestLogic) AcceptFriendRequest(req *types.AcceptFriendNo
 	if err != nil {
 		return nil, err
 	}
+
+	go func() {
+		//Send the notification via websocket
+		_ = serverWs.SendNotificationToUser(notification.Receiver, notification.Sender, fmt.Sprintf("[SYSTEM MESSAGE] %s accecpted your friend request.", u.Name))
+	}()
+
 	return &types.AcceptFriendNotificationResp{
 		Message: fmt.Sprintf("friend request accepted"),
 	}, nil

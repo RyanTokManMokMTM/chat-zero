@@ -25,15 +25,11 @@ func main() {
 
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)
-	hub := serverWs.NewChannelMap()
-	go hub.Run()
 
 	server.AddRoute(rest.Route{
-		Method: http.MethodGet,
-		Path:   "/ws",
-		Handler: func(w http.ResponseWriter, r *http.Request) {
-			serverWs.ServerWS(ctx, hub, w, r)
-		},
+		Method:  http.MethodGet,
+		Path:    "/ws",
+		Handler: serverWs.NewServerWS(ctx),
 	}, rest.WithJwt(ctx.Config.Auth.AccessSecret))
 
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
