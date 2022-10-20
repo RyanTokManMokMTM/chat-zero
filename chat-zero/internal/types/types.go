@@ -132,3 +132,23 @@ type RoomMemberInfo struct {
 	UserID   uint   `json:"user_id"`
 	UserName string `json:"user_name"`
 }
+
+type GetRoomMessageReq struct {
+	RoomID uint `path:"room_id"`
+}
+
+type GetRoomMessageResp struct {
+	Messagees []MessageData `json:"message"`
+}
+
+type MessageData struct {
+	MessageID uint       `json:"msg_id"`
+	UserInfo  SenderInfo `json:"user_info"`
+	Content   string     `json:"content"`
+	SendTime  int64      `json:"send_time"`
+}
+
+type SenderInfo struct {
+	UserID   uint   `json:"user_id"`
+	UserName string `json:"user_name"`
+}

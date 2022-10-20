@@ -15,4 +15,10 @@ func (d *DAO) InsertOneMessage(ctx context.Context, roomID, userId uint, message
 	return msg.InsertOne(d.engine, ctx)
 }
 
-func (d *DAO) GetRoomMessage() {}
+func (d *DAO) GetRoomMessage(ctx context.Context, roomID uint) ([]*model.Message, error) {
+	msg := &model.Message{
+		RoomID: roomID,
+	}
+
+	return msg.GetRoomMessages(d.engine, ctx)
+}

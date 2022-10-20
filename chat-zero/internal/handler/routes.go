@@ -6,6 +6,7 @@ import (
 
 	check "gtihub.com/ryantokmanmokmtm/chat-zero/internal/handler/check"
 	friend "gtihub.com/ryantokmanmokmtm/chat-zero/internal/handler/friend"
+	message "gtihub.com/ryantokmanmokmtm/chat-zero/internal/handler/message"
 	room "gtihub.com/ryantokmanmokmtm/chat-zero/internal/handler/room"
 	user "gtihub.com/ryantokmanmokmtm/chat-zero/internal/handler/user"
 	"gtihub.com/ryantokmanmokmtm/chat-zero/internal/svc"
@@ -112,6 +113,17 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodGet,
 				Path:    "/room/members/:room_id",
 				Handler: room.RoomMembersHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/message/:room_id",
+				Handler: message.GetRoomMessageHandler(serverCtx),
 			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),

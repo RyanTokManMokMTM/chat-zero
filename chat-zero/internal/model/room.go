@@ -52,3 +52,12 @@ func (r *Room) FindRoomMembers(db *gorm.DB, ctx context.Context) ([]*User, error
 	}
 	return members, nil
 }
+
+func (r *Room) FindOneRoomMember(db *gorm.DB, ctx context.Context, userID uint) (*User, error) {
+	var members *User
+	err := db.WithContext(ctx).Debug().Model(&r).Where("user_id = ?", userID).Association("Users").Find(&members)
+	if err != nil {
+		return nil, err
+	}
+	return members, nil
+}

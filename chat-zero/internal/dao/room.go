@@ -72,3 +72,10 @@ func (d *DAO) FindRoomMembers(ctx context.Context, roomID uint) ([]*model.User, 
 	}
 	return r.FindRoomMembers(d.engine, ctx)
 }
+
+func (d *DAO) FindOneRoomMember(ctx context.Context, roomID, userID uint) (*model.User, error) {
+	r := model.Room{
+		ID: roomID,
+	}
+	return r.FindOneRoomMember(d.engine, ctx, userID)
+}

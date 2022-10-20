@@ -75,6 +75,8 @@ func (ch *ChannelMap) Run() {
 						}
 						client.send <- send
 					}
+					//if the user not online -> send a notification?
+					//or push to a message queue?
 				}
 			} else {
 				//send to all user
