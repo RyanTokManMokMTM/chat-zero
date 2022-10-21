@@ -1,20 +1,31 @@
 package serverWs
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/zeromicro/go-zero/core/logx"
 	"gtihub.com/ryantokmanmokmtm/chat-zero/internal/svc"
 	"gtihub.com/ryantokmanmokmtm/chat-zero/util/ctxtool"
 	"net/http"
-	"time"
 )
 
 var globalHub *ChannelMap
 
+type OpCode byte
+
+const (
+	OpContinuation OpCode = 0x0
+	OpText         OpCode = 0x1
+	OpBinary       OpCode = 0x2
+	OpClose        OpCode = 0x8
+	OpPing         OpCode = 0x9
+	OpPong         OpCode = 0xa
+)
+
 const (
 	SYSTEM = iota
 	MESSAGE
+	Ping
+	Pong
 )
 
 type SenderData struct {
@@ -23,13 +34,15 @@ type SenderData struct {
 }
 
 type MessageReq struct {
+	OpCode  OpCode `json:"opcode"`
 	GroupID uint   `json:"group_id"`
 	Message string `json:"message"`
 }
 
 type Message struct {
-	Type         uint       `json:"message_type"`
-	GroupID      uint       `json:"group_id"` //for chat
+	OpCode       OpCode     `json:"opcode"`
+	Type         uint       `json:"message_type"` //system , message , ping ,pong
+	GroupID      uint       `json:"group_id"`     //for chat
 	GroupMembers []uint     `json:"-"`
 	ToUser       uint       `json:"to_user"` //for notification
 	UserID       uint       `json:"user_id"`
@@ -40,7 +53,7 @@ type Message struct {
 
 const (
 	ReadWait  = 60
-	WriteWait = 60
+	WriteWait = 20
 	ReadLimit = 1024
 )
 
@@ -60,12 +73,13 @@ func NewServerWS(svcCtx *svc.ServiceContext) func(w http.ResponseWriter, r *http
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		logx.Info("Req came in...")
 		ServerWS(svcCtx, globalHub, w, r)
 	}
 }
 
 func ServerWS(ctx *svc.ServiceContext, hub *ChannelMap, w http.ResponseWriter, r *http.Request) {
-
+	logx.Info("Trying to connect...")
 	userId := ctxtool.GetUserIDFromCtx(r.Context())
 	if userId == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -86,15 +100,15 @@ func ServerWS(ctx *svc.ServiceContext, hub *ChannelMap, w http.ResponseWriter, r
 	logx.Infof("Client %d(name:%s) is connected via websocket", userId, u.Name)
 	client := NewClientConn(userId, conn, hub, ctx)
 	hub.register <- client
-	hub.broadcast <- &Message{
-		Type:         SYSTEM,
-		GroupID:      0,
-		ToUser:       0,
-		UserID:       u.ID,
-		Content:      fmt.Sprintf("[SYSTEM] %s is now online.", u.Name),
-		SendTime:     time.Now().Unix(),
-		GroupMembers: nil,
-	}
+	//hub.broadcast <- &Message{
+	//	Type:         SYSTEM,
+	//	GroupID:      0,
+	//	ToUser:       0,
+	//	UserID:       u.ID,
+	//	Content:      fmt.Sprintf("[SYSTEM] %s is now online.", u.Name),
+	//	SendTime:     time.Now().Unix(),
+	//	GroupMembers: nil,
+	//}
 
 	go client.ReadLoop()
 	go client.WriteLoop()

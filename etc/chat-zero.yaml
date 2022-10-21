@@ -1,8 +1,8 @@
 Name: Chat-Zero
 Host: 0.0.0.0
-Port: 443
-CertFile: resources/certification/server_cert.pem
-KeyFile: resources/certification/server_key.pem
+Port: 8000
+# CertFile: resources/certification/server_cert.pem
+# KeyFile: resources/certification/server_key.pem
 
 Auth:
   AccessSecret: 2BNVfmf0WtyX1HQmzYG5rOKLzlHBEPRX729pZ0gpxujnaikoRRCF78T8fKDNTLWy

@@ -38,13 +38,15 @@ func (c *ClientConn) ReadLoop() {
 
 	c.conn.SetReadDeadline(time.Now().Add(time.Second * ReadWait))
 	c.conn.SetReadLimit(ReadLimit)
-	c.conn.SetPongHandler(func(string) error {
-		c.conn.SetReadDeadline(time.Now().Add(time.Second * ReadWait))
-		return nil
-	})
+	//c.conn.SetPongHandler(func(string) error {
+	//	c.conn.SetReadDeadline(time.Now().Add(time.Second * ReadWait))
+	//
+	//	return nil
+	//})
 
 	for {
 		//get data from connection
+		//c.conn.SetReadDeadline(time.Now().Add(time.Second * ReadWait))
 		_, msg, err := c.conn.ReadMessage()
 		if err != nil {
 			logx.Error(err)
@@ -53,13 +55,31 @@ func (c *ClientConn) ReadLoop() {
 			}
 			break
 		}
+
 		req := &MessageReq{}
 		err = json.Unmarshal(msg, req)
 		if err != nil {
 			logx.Error(err)
 			//there may send back an error message
+			c.conn.SetReadDeadline(time.Now().Add(time.Second * ReadWait))
 			continue
 		}
+
+		if req.OpCode == OpPong {
+			//send the pong message
+			logx.Info("received a pong message from client")
+			c.conn.SetReadDeadline(time.Now().Add(time.Second * ReadWait))
+			continue
+		}
+
+		if req.OpCode == OpPing {
+			logx.Info("received a ping message from client")
+			c.hub.broadcast <- &Message{
+				OpCode: OpPong,
+			}
+			continue
+		}
+
 		u, err := c.svcCtx.DAO.UserFindOneByID(context.TODO(), c.UserID)
 		if err != nil {
 			logx.Error(err)
@@ -102,7 +122,7 @@ func (c *ClientConn) ReadLoop() {
 }
 
 func (c *ClientConn) WriteLoop() {
-	t := time.NewTicker(time.Second * (WriteWait / 2))
+	t := time.NewTicker(time.Second * (ReadWait * 9 / 10))
 	defer func() {
 		c.hub.unRegister <- c // remove client from map
 		c.conn.Close()        //close connection
@@ -145,8 +165,17 @@ func (c *ClientConn) WriteLoop() {
 			}
 
 		case <-t.C:
-			c.conn.SetWriteDeadline(time.Now().Add(time.Second * 45))
+			//TODO: if connection is left -> break
+
+			logx.Info("send a ping message")
+			c.conn.SetWriteDeadline(time.Now().Add(time.Second * WriteWait))
 			//send a ping message
+			pingMessage := Message{
+				OpCode: OpPing,
+			}
+
+			data, _ := json.Marshal(pingMessage)
+			c.conn.WriteMessage(websocket.TextMessage, data)
 		}
 	}
 }

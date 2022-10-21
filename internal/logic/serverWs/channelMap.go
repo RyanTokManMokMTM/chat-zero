@@ -9,7 +9,9 @@ import (
 
 type ChannelMap struct {
 	sync.Mutex
-	channels   map[uint]*ClientConn
+	channels map[uint]*ClientConn
+	//store roomID here?
+	//[roomID] -> [AnyConnection?]
 	register   chan *ClientConn
 	unRegister chan *ClientConn
 	broadcast  chan *Message //send to all user is online - chat
